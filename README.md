@@ -15,7 +15,7 @@ Execute the deployment script (must be done with sudo):
 
 $ chmod +x ./deploy.sh
 $ sudo ./deploy.sh
-Test that the deployment went fine by logging in to 192.168.10.42://login.html on the host machine browser.
+Test that the deployment went fine by logging in to 10.12.142.142://index.html on the host machine browser.
 
 To get a checksum of the VM disk, go to /home/admin/VirtualBox VMs/, select the VM and then run:
 
