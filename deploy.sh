@@ -255,7 +255,7 @@ cp ${WEB_DIR}/app.js /var/www/html/ || err_exit "Failed to copy app.js"
 cp ${WEB_DIR}/buttons.js /var/www/html/ || err_exit "Failed to copy buttons.js"
 cp ${WEB_DIR}/index.html /var/www/html/ || err_exit "Failed to copy index.html"
 cp ${WEB_DIR}/style.css /var/www/html/ || err_exit "Failed to copy style.css"
-mkdir /var/www/html/img/ >/dev/null/
+mkdir /var/www/html/img/ >/dev/null
 cp ${WEB_DIR}/img/apple-touch-icon-152x152.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-152x152.png"
 cp ${WEB_DIR}/img/apple-touch-icon-167x167.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-167x167.png"
 cp ${WEB_DIR}/img/apple-touch-icon-180x180.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-180x180.png"
