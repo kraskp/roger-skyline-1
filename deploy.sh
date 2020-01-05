@@ -37,6 +37,10 @@ SRC_DIR="${SCRIPT_DIR}/src/"
 # Check that the src/ directory exists.
 [ ! -d "${SRC_DIR}" ] && err_exit "Source directory \"${SRC_DIR}\" does not exist"
 
+WEB_DIR="${SCRIPT_DIR}/web/"
+# Check that the web/ directory exists.
+[ ! -d "${WEB_DIR}" ] && err_exit "Web directory \"${WEB_DIR}\" does not exist"
+
 pr "Updating system"
 apt-get update -y || err_exit
 echo
@@ -244,8 +248,21 @@ pr "Deploying 000-default.conf src file"
 cp ${SRC_DIR}/000-default.conf /etc/apache2/sites-available/ || err_exit "Failed to copy 000-default.conf"
 echo
 
-pr "Deploy the login page"
-cp ${SRC_DIR}/login.html /var/www/html/ || err_exit "Failed to copy login.html"
+pr "Deploy the webapp"
+# cp ${SRC_DIR}/login.html /var/www/html/ || err_exit "Failed to copy login.html"
+cp ${WEB_DIR}/_config.yml /var/www/html/ || err_exit "Failed to copy _config.yml"
+cp ${WEB_DIR}/app.js /var/www/html/ || err_exit "Failed to copy app.js"
+cp ${WEB_DIR}/buttons.js /var/www/html/ || err_exit "Failed to copy buttons.js"
+cp ${WEB_DIR}/index.html /var/www/html/ || err_exit "Failed to copy index.html"
+cp ${WEB_DIR}/style.css /var/www/html/ || err_exit "Failed to copy style.css"
+mkdir /var/www/html/img/ >/dev/null/
+cp ${WEB_DIR}/img/apple-touch-icon-152x152.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-152x152.png"
+cp ${WEB_DIR}/img/apple-touch-icon-167x167.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-167x167.png"
+cp ${WEB_DIR}/img/apple-touch-icon-180x180.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-180x180.png"
+cp ${WEB_DIR}/img/apple-touch-icon.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon.png"
+cp ${WEB_DIR}/img/icon-hires.png /var/www/html/img/ || err_exit "Failed to copy icon-hires.pngg"
+cp ${WEB_DIR}/img/icon-normal.png /var/www/html/img/ || err_exit "Failed to copy icon-normal.png"
+
 echo
 
 pr_notice "Don't forget to setup SSH public key authentication on the host side!"
@@ -253,14 +270,14 @@ echo
 pr_notice "Don't forget to copy the nameserver from host machine /etc/resolv.conf to this machine if needed!"
 echo
 
-pr "And finally..."
-sleep 2
-pr "Deploy the"
-sleep 2
-cat ${SRC_DIR}/img_hamster_name
-mkdir /var/www/html/img/ >/dev/null
-cp ${SRC_DIR}/img/you.png /var/www/html/img/ || err_exit "Failed to copy you.png"
-echo
+pr "DEPLOYED"
+# sleep 2
+# pr "Deploy the"
+# sleep 2
+# cat ${SRC_DIR}/img_hamster_name
+# mkdir /var/www/html/img/ >/dev/null
+# cp ${SRC_DIR}/img/you.png /var/www/html/img/ || err_exit "Failed to copy you.png"
+# echo
 
-sleep 1
-cat ${SRC_DIR}/img_hamster
+# sleep 1
+# cat ${SRC_DIR}/img_hamster
