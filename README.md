@@ -30,23 +30,20 @@ Then you need to set up  Debian. The most important thing is to `Partition disks
 ![partition1_img](img/partition1.png)
 
 then:
-
 ![partition2_img](img/partition2.png)
 
 go for `Create a new partition` and specify new partition size:
-
 ![partition3_img](img/partition3.png)
 
 choose type and location (i choosed beggining); choose file system(i went for `/ - the root file system`):
-
 ![partition4_img](img/partition4.png)
 
 I created 3 partitions: one `primary` with mount point on the `/ (root)` of OS and with 4.2GB capacity, second `logical` with mount point on the `/home` dir and 3.4GB of space, and third `swap` with 988.8 MB of space:
-
-![partition_5_img](img/partition5.png)
+![partition5_img](img/partition5.png)
 
 then go for `Finish partitioning and write changes to disk`.
-Finally, I did not install desktop envirinment.
+Finally, I selected the defaults. No http proxy. I did not install desktop envirinment, only SSH server and standard system utilities.
+![softsel_img](img/softsel.png)
 
 ## V.2 Network and Security Part <a id="NetworkSecurityPart"></a>
 ### You must create a non-root user to connect to the machine and work.
@@ -56,30 +53,30 @@ First, we need to install `sudo`, what we can do only as root, so:
 ```
 $ su
 $ apt-get update -y && apt-get upgrade -y
-$ apt-get install sudo vim -y
+$ apt-get install sudo -y
 ```
 exit root mode:
 ```
 $ exit
 ```
-but now, if we'll try to use `sudo`, the OS will respond: `kseniia is not in the sudoers file. This incident will be reported`. That means we need to open `/etc/sudoers` file (again under the root). Don't forget to check rights on the file (must be writible!).
+but now, if we'll try to use `sudo`, the OS will respond: `kseniia is not in the sudoers file. This incident will be reported`. That means we need to open `/etc/sudoers` file as root. Don't forget to check rights on the file (must be writible!).
 ```
 $ pwd
 /etc
 $ chmod +w sudoers
-$ vim sudoers
+$ nano sudoers
 ```
-add `username ALL=(ALL:ALL) ALL` to `# User priviliege specification` section:
+add `username ALL=(ALL:ALL) ALL` to `# User privilege specification` section:
 
 ![sudoers](img/sudoers.png)
 
 ### We don’t want you to use the DHCP service of your machine. You’ve got to configure it to have a static IP and a Netmask in \30. <a id="StaticIP"></a>
-First, go to VirtualBox settings -> Network -> in `Attached to` subsection change ***NAT*** on ***Bridged Adapter***; i like using `ifconfig`, that's why i'll install it (it's always possible to use `ip`):
+Install `ifconfig`:
 ```
 $ sudo apt-get install net-tools
 $ sudo ifconfig
 ```
-As we see, the name of our `bridged adapter` is ***enp0s3***. Let's setup ***static ip*** (not dynamical) - check [How to setup a Static IP address on Debian Linux](https://linuxconfig.org/how-to-setup-a-static-ip-address-on-debian-linux) and [Network of VirtualBox instances with static IP addresses and Internet access](https://www.codesandnotes.be/2018/10/16/network-of-virtualbox-instances-with-static-ip-addresses-and-internet-access/).
+As we see, the name of our `bridged adapter` is ***enp0s3***. Let's setup ***static ip*** (not dynamic).
 
 ***1.*** We should modify `/etc/network/interfaces` network config file (don't forget to`$ sudo chmod +w interfaces`):
 
@@ -109,36 +106,34 @@ let's check status of ssh server:
 ```
 $ ps -ef | grep sshd
 ```
-next we need to change `/etc/ssh/sshd_config` file [Changing the SSH Port for Your Linux Server](https://se.godaddy.com/help/changing-the-ssh-port-for-your-linux-server-7306):
+next we need to change `/etc/ssh/sshd_config`
 ```
-$ sudo vim /etc/ssh/sshd_config
+$ sudo nano /etc/ssh/sshd_config
 ```
-and change the line `# Port 22` - remove `#` and type choosen port number; you can use range of numbers from 49152 to 65535 (accordingly to IANA); i chosed port number ***50000***; restart the sshd service:
+and change the line `# Port 22` - remove `#` and type choosen port number; you can use range of numbers from 49152 to 65535 (accordingly to IANA); I chose port number ***50000***; restart the sshd service:
 ```
 $ sudo service sshd restart
 ```
 login with ssh and check status of our connection:
 ```
-$ sudo ssh kseniia@192.168.10.42 -p 50000
+$ sudo ssh ken@10.12.142.142 -p 50000
 $ sudo systemctl status ssh
 ```
 #### Finaly <a id="SSHKeySetup"></a>
-let's test the ssh conection from host. We need to setup SSH public key authentication [Setup SSH Public Key Authentication](https://www.cyberciti.biz/faq/ubuntu-18-04-setup-ssh-public-key-authentication/); OS of my host is macOS Sierra; run from ***your host's terminal***:
+let's test the ssh conection from host. We need to setup SSH public key authentication; OS of my host is macOS; run from ***your host's terminal***:
 
 ```
 # host terminal
 
 $ ssh-keygen -t rsa
+-- cat ~/.ssh/id_rsa.pub
+-- Save key
+-- ssh [USERNAME.VM]@[IP.VM] -p [PORT.SSH.VM]
+-- sudo mkdir .ssh
+-- sudo vim .ssh/authorized_keys -> paste pub key 
+-- replace password autentifi
 ```
-to connect 2 interfaces they must be in one subnet; for the ip on VM allowed 2 ip adresses (because we use netmask /30): 192.168.10.42(for VM, ip addr that we set) and 192.168.10.41(for host); we need to set up the ip addr to the host: ***System Preferences*** -> ***Network*** -> ***Advanced*** -> ***TCP/IP*** -> ***Select Manual*** -> ***Enter the new ip addr (192.168.10.41)*** -> ***Apply***; you can also try to change ip via `ifconfig`. Now we can connect to our server(VM):
-```
-# host terminal
 
-$ ping 192.168.10.42
-$ ssh kseniia@192.168.10.42 -p 50000
-$ exit (logout from the ssh)
-```
-last step is [HOW DO I DISABLE SSH LOGIN FOR THE ROOT USER?](https://mediatemple.net/community/products/dv/204643810/how-do-i-disable-ssh-login-for-the-root-user). To disable root SSH login, edit `/etc/ssh/sshd_config`, by changing line `# PermitRootLogin yes` to `PermitRootLogin no`. Restart the SSH daemon: `sudo service sshd restart`. And read [Why should I really disable root ssh login?](https://superuser.com/questions/1006267/why-should-i-really-disable-root-ssh-login)
 
 ### You have to set the rules of your firewall on your server only with the services used outside the VM. <a id="UFW"></a>
 I'll set up a Firewall with the help of ***UFW (Uncomplicated Firewall)***, whisch is an interface to ***iptables*** that is geared towards simplifying the process of configuring a firewall. 
