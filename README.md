@@ -110,7 +110,8 @@ next we need to change `/etc/ssh/sshd_config`
 ```
 $ sudo nano /etc/ssh/sshd_config
 ```
-and change the line `# Port 22` - remove `#` and type choosen port number; you can use range of numbers from 49152 to 65535 (accordingly to IANA); I chose port number ***50000***; restart the sshd service:
+and change the line `# Port 22` - remove `#` and type choosen port number; you can use range of numbers from 49152 to 65535 (accordingly to IANA); I chose port number ***50000***; 
+for now, set password authentication to "yes" and restart the sshd service:
 ```
 $ sudo service sshd restart
 ```
@@ -121,18 +122,22 @@ $ sudo systemctl status ssh
 ```
 #### Finaly <a id="SSHKeySetup"></a>
 let's test the ssh conection from host. We need to setup SSH public key authentication; OS of my host is macOS; run from ***your host's terminal***:
-
 ```
 # host terminal
 
 $ ssh-keygen -t rsa
--- cat ~/.ssh/id_rsa.pub
--- Save key
--- ssh [USERNAME.VM]@[IP.VM] -p [PORT.SSH.VM]
--- sudo mkdir .ssh
--- sudo vim .ssh/authorized_keys -> paste pub key 
--- replace password autentifi
+$ cat ~/.ssh/id_rsa.pub
 ```
+Copy the key
+```
+# host terminal
+
+$ ssh [USERNAME.VM]@[IP.VM] -p [PORT.SSH.VM]
+$ sudo mkdir .ssh
+$ sudo nano .ssh/authorized_keys
+```
+ -> paste pub key 
+replace password autentification in /etc/ssh/sshd_config to "no", set public key authentication to "yes", set permit root login to "no"
 
 
 ### You have to set the rules of your firewall on your server only with the services used outside the VM. <a id="UFW"></a>
