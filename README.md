@@ -24,17 +24,18 @@ First, start VB, go to Setting->Network and set the Network Adapter to Bridged A
 
 Next go to Settings->Storage and specify the image of the OS - I used `debian-10.2.0-amd64-netinst.iso`.
 ![specify_img](img/deb_iso.png)
+Make sure you have saved the VDI in `goinfre` so you don't run out of space.
 
-Then you need to set up you Debian, process is quite simple, but i'll pay some attention on `Partition disks` part. Choose `Partition method` as `manual` and next choose:
-![partition_1](img/partition_1.png)
+Then you need to set up  Debian. The most important thing is to `Partition disks` correctly. Choose `Partition method` as `manual` and next choose:
+![partition_1](img/partition1.png)
 
 then:
 
-![partition_2](img/partition_2.png)
+![partition_2](img/partition2.png)
 
 go for `Create a new partition` and specify new partition size:
 
-![partition_3](img/partition_3.png)
+![partition_3](img/partition3.png)
 
 choose type and location (i choosed beggining); choose file system(i went for `/ - the root file system`):
 
