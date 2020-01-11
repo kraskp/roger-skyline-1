@@ -19,8 +19,11 @@
 
 ## V.1 VM Part <a id="VMPart"></a>
 ***hypervisor:*** VirtualBox; ***Linux OS:*** Debian(64-bit); size of the hard disk is 8.00 GB(VDI, fixed size);
-Next you should run the virtual machine and specify the image of the OS - i downloaded `debian-10.1.0-amd64-netinst.iso` from https://www.debian.org/distrib/.
-![specify_img](img/specify_img.png)
+First, start VB, go to Setting->Network and set the Network Adapter to Bridged Adapter.
+![specify_img](img/bridged.png)
+
+Next go to Settings->Storage and specify the image of the OS - I used `debian-10.2.0-amd64-netinst.iso`.
+![specify_img](img/deb_iso.png)
 
 Then you need to set up you Debian, process is quite simple, but i'll pay some attention on `Partition disks` part. Choose `Partition method` as `manual` and next choose:
 ![partition_1](img/partition_1.png)
