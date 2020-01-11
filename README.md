@@ -353,17 +353,14 @@ $ echo "Text" | sudo mail -s "Subject" root@debian.lan
 ```
 Then login as root and start `mutt`. The mail should now be visible.
 
-The crontab script should now work.
-- [Setting Up Local Mail Delivery on Ubuntu with Postfix and Mutt](https://www.cmsimike.com/blog/2011/10/30/setting-up-local-mail-delivery-on-ubuntu-with-postfix-and-mutt/)
-
-> to copy file from host to VM via SSH: `scp -P 50000 i_will_monitor_cron.sh kseniia@192.168.10.42:~` (~ means home dir)
 ## V.2 Web Part <a id="WebPart"></a>
-my login page:
-
-![login_page](img/login_page.png)
+My webpage is a notepad webapp I found online and modified a bit
 
 
-> scp -P 50000 kseniia@192.168.10.42:/var/www/html/index.html .
+> scp -P 50000 ken@10.12.142.142:/var/www/html/index.html
+> scp -P 50000 ken@10.12.142.142:/var/www/html/app.js
+
+Copy the rest of the files similarly
 
 Generate SSL self-signed key and certificate:
 ```
@@ -373,7 +370,7 @@ State or Province Name: ENTER
 Locality Name: ENTER
 Organization Name: ENTER
 Organizational Unit Name: ENTER
-Common Name: 192.168.10.42 (VM IP address)
+Common Name: 10.12.142.142 (VM IP address)
 Email Address: root@debian.lan
 ```
 
@@ -398,7 +395,7 @@ Edit the file /etc/apache2/sites-available/default-ssl.conf so it looks like thi
 <IfModule mod_ssl.c>
 	<VirtualHost _default_:443>
 		ServerAdmin root@localhost
-		ServerName 192.168.10.42
+		ServerName 10.12.142.142
 		DocumentRoot /var/www/html
 		ErrorLog ${APACHE_LOG_DIR}/error.log
 		CustomLog ${APACHE_LOG_DIR}/access.log combined
@@ -417,7 +414,7 @@ Edit the file /etc/apache2/sites-available/default-ssl.conf so it looks like thi
 
 Add a redirect rule to /etc/apache2/sites-available/000-default.conf, to redirect HTTP to HTTPS:
 ```
-Redirect "/" "https://192.168.10.42/"
+Redirect "/" "https://10.12.142.142/"
 ```
 
 Enable everything changed and restart the Apache service:
@@ -430,8 +427,8 @@ $ sudo apache2ctl configtest (to check that the syntax is OK)
 $ sudo systemctl restart apache2
 ```
 
-The SSL server is tested by entering "https://192.168.10.42" in a host browser. The expected result is a "Your connection is not private" warning page. Continue from this by selecting Advanced->Proceed to...
-HTTP->HTTPS redirection is tested by entering "http://192.168.10.42" in the host browser.
+The SSL server is tested by entering "https://10.12.142.142" in a host browser. The expected result is a "Your connection is not private" warning page. Continue from this by selecting Advanced->Proceed to...
+HTTP->HTTPS redirection is tested by entering "https://10.12.142.142" in the host browser.
 
 ## V.3 Deployment Part <a id="DepPart"></a>
 
