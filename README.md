@@ -115,7 +115,7 @@ $ sudo service sshd restart
 ```
 login with ssh and check status of our connection:
 ```
-$ sudo ssh ken@10.12.142.142 -p 50000
+$ sudo ssh ken@10.12.124.124 -p 50000
 $ sudo systemctl status ssh
 ```
 #### Finaly <a id="SSHKeySetup"></a>
@@ -357,8 +357,8 @@ Then login as root and start `mutt`. The mail should now be visible.
 My webpage is a notepad webapp I found online and modified a bit
 
 
-> scp -P 50000 ken@10.12.142.142:/var/www/html/index.html
-> scp -P 50000 ken@10.12.142.142:/var/www/html/app.js
+> scp -P 50000 ken@10.12.124.124:/var/www/html/index.html
+> scp -P 50000 ken@10.12.124.124:/var/www/html/app.js
 
 Copy the rest of the files similarly
 
@@ -370,7 +370,7 @@ State or Province Name: ENTER
 Locality Name: ENTER
 Organization Name: ENTER
 Organizational Unit Name: ENTER
-Common Name: 10.12.142.142 (VM IP address)
+Common Name: 10.12.124.124 (VM IP address)
 Email Address: root@debian.lan
 ```
 
@@ -395,7 +395,7 @@ Edit the file /etc/apache2/sites-available/default-ssl.conf so it looks like thi
 <IfModule mod_ssl.c>
 	<VirtualHost _default_:443>
 		ServerAdmin root@localhost
-		ServerName 10.12.142.142
+		ServerName 10.12.124.124
 		DocumentRoot /var/www/html
 		ErrorLog ${APACHE_LOG_DIR}/error.log
 		CustomLog ${APACHE_LOG_DIR}/access.log combined
@@ -427,8 +427,8 @@ $ sudo apache2ctl configtest (to check that the syntax is OK)
 $ sudo systemctl restart apache2
 ```
 
-The SSL server is tested by entering "https://10.12.142.142" in a host browser. The expected result is a "Your connection is not private" warning page. Continue from this by selecting Advanced->Proceed to...
-HTTP->HTTPS redirection is tested by entering "https://10.12.142.142" in the host browser.
+The SSL server is tested by entering "https://10.12.124.124" in a host browser. The expected result is a "Your connection is not private" warning page. Continue from this by selecting Advanced->Proceed to...
+HTTP->HTTPS redirection is tested by entering "https://10.12.124.124" in the host browser.
 
 ## V.3 Deployment Part <a id="DepPart"></a>
 
