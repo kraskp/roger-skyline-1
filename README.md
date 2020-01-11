@@ -20,33 +20,34 @@
 ## V.1 VM Part <a id="VMPart"></a>
 ***hypervisor:*** VirtualBox; ***Linux OS:*** Debian(64-bit); size of the hard disk is 8.00 GB(VDI, fixed size);
 First, start VB, go to Setting->Network and set the Network Adapter to Bridged Adapter.
-![specify_img](img/bridged.png)
+![bridged_img](img/bridged.png)
 
 Next go to Settings->Storage and specify the image of the OS - I used `debian-10.2.0-amd64-netinst.iso`.
-![specify_img](img/deb_iso.png)
+![deb_iso_img](img/deb_iso.png)
 Make sure you have saved the VDI in `goinfre` so you don't run out of space.
 
 Then you need to set up  Debian. The most important thing is to `Partition disks` correctly. Choose `Partition method` as `manual` and next choose:
-![partition_1](img/partition1.png)
+![partition1_img](img/partition1.png)
 
 then:
 
-![partition_2](img/partition2.png)
+![partition2_img](img/partition2.png)
 
 go for `Create a new partition` and specify new partition size:
 
-![partition_3](img/partition3.png)
+![partition3_img](img/partition3.png)
 
 choose type and location (i choosed beggining); choose file system(i went for `/ - the root file system`):
 
-![partition_4](img/partition_4.png)
+![partition4_img](img/partition4.png)
 
-i created 2 partitions: one `primary` with mout point on the `/ (root)` of OS and with 4.2GB capacity, second `logical` with mount point on the `/home` dir and 4.4GB of space:
+I created 3 partitions: one `primary` with mount point on the `/ (root)` of OS and with 4.2GB capacity, second `logical` with mount point on the `/home` dir and 3.4GB of space, and third `swap` with 988.8 MB of space:
 
-![partition_5](img/partition_5.png)
+![partition_5_img](img/partition5.png)
 
 then go for `Finish partitioning and write changes to disk`.
-Finally, i did not install desktop envirinment; GRUB i accepted.
+Finally, I did not install desktop envirinment.
+
 ## V.2 Network and Security Part <a id="NetworkSecurityPart"></a>
 ### You must create a non-root user to connect to the machine and work.
 Non-root login was created while setting up the OS. Just log in.
