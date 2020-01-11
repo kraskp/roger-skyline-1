@@ -82,8 +82,6 @@ As we see, the name of our `bridged adapter` is ***enp0s3***. Let's setup ***sta
 
 ![interfaces](img/interfaces.png)
 
-[Файл настройки сети /etc/network/interfaces)](https://notessysadmin.com/fajl-nastrojki-seti)
-
 ***2.*** Define your network interfaces separately within `/etc/network/interfaces.d/` directory. During the networking daemon initiation the `/etc/network/interfaces.d/` directory is searched for network interface configurations. Any found network configuration is included as part of the `/etc/network/interfaces`. So:
 ```
 $ cd interfaces.d
@@ -142,7 +140,6 @@ replace password autentification in /etc/ssh/sshd_config to "no", set public key
 
 ### You have to set the rules of your firewall on your server only with the services used outside the VM. <a id="UFW"></a>
 I'll set up a Firewall with the help of ***UFW (Uncomplicated Firewall)***, whisch is an interface to ***iptables*** that is geared towards simplifying the process of configuring a firewall. 
-> by the way - couple of times i had the problem with `upd-get install` - for some reason my VM could nor reach the server with package, also `ping` did not work; ***SOLUTION*** for problem `apt-get update fails to fetch files, “Temporary failure resolving …” error`: open `/etc/resolv.conf` file on your host, copy the `namserver` value (`nameserver fdb8:8db8:81bd::1`) and modify `/etc/resolv.conf` on VM with this value
 ```
 $ sudo apt-get install ufw
 $ sudo ufw status
@@ -162,43 +159,30 @@ $ sudo ufw allow 80/tcp
 $ sudo ufw allow 443
 ```
 now let's check status of our firewall:
-
 ![ufw_status](img/ufw_status.png)
 
-here are some usefull links:
-- [Linux firewalls: What you need to know about iptables and firewalld](https://opensource.com/article/18/9/linux-iptables-firewalld)
-- [UFW](https://help.ubuntu.com/community/UFW)
-- [How To Set Up a Firewall with UFW on Debian 9](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-debian-9)
 
 ### You have to set a DOS (Denial Of Service Attack) protection on your open ports of your VM. <a id="DOS"></a>
-There are a lot of methods to set a DOS protection: [A guide to secure your server from DDoS!](https://bobcares.com/blog/centos-ddos-protection/) Let's use one of listed via the link - `Fail2Ban`:
+Let's use `Fail2Ban`. We will install that and `iptables` and `apache2`:
 ```
 $ sudo apt-get install iptables fail2ban apache2
 ```
 Fail2Ban keeps its configuration files in `/etc/fail2ban` folder. The configuration file is `jail.conf` which is present in this directory. This file can be modified by package upgrades so we will keep a copy of it `jail.local` and edit it.
 ```
 $ sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-$ sudo vim /etc/fail2ban/fail2ban.local
+$ sudo nano /etc/fail2ban/jail.local
 ```
 
 1. SSH protocol security (protect open port 50000). Edit `/etc/fail2ban/jail.local`: 
-
 ![fail2ban_ssh](img/fail2ban_ssh.png)
 
-- [Fail2Ban Port 80 to protect sites from DOS Attacks](http://www.tothenew.com/blog/fail2ban-port-80-to-protect-sites-from-dos-attacks/)
-- [Настройка Fail2ban](https://vps.ua/wiki/configuring-fail2ban/)
-
 2. HTTP protocol security (protect our port 80). Edit `/etc/fail2ban/jail.local`:
-
 ![fail2ban_http](img/fail2ban_http.png)
 
 Now we need to create the filter, to do that, create the file `/etc/fail2ban/filter.d/http-get-dos.conf` and add this text:
-
 ![http-get-dos.png](img/http-get-dos.png)
 
-- [Install fail2ban to protect your site from DOS attacks](https://www.garron.me/en/go2linux/fail2ban-protect-web-server-http-dos-attack.html)
-
-finaly:
+finally:
 ```
 $ sudo ufw reload
 $ sudo service fail2ban restart
@@ -264,30 +248,48 @@ $ sudo systemctl disable keyboard-setup.service
 ### Create a script that updates all the sources of package, then your packages and which logs the whole in a file named /var/log/update_script.log. Create a scheduled task for this script once a week at 4AM and every time the machine reboots. <a id="UpdatePackages"></a>
 
 ```
-$ touch i_will_update.sh
-$ chmod a+x i_will_update.sh
+$ touch update.sh
+$ chmod a+x update.sh
 ```
-![update](img/update.png)
+```
+#!/bin/bash
+sudo apt-get update -y >> /var/log/update_script.log
+sudo apt-get upgrade -y >> /var/log/update_script.log
+```
 
 ```
 $ sudo crontab -e
 ```
 
-![cron_update](img/cron_update.png)
-
- - [crontab guru](https://crontab.guru/#0_4_*_*_MON)
+Add these line to `crontab`:
+```
+@reboot root sudo /home/ken/monitor_cron.sh
+0 4 * * 1 root sudo /home/ken/monitor_cron.sh
+```
 
 ### Make a script to monitor changes of the /etc/crontab file and sends an email to root if it has been modified. Create a scheduled script task every day at midnight.  <a id="UpdateCron"></a>
 
 ```
-$ touch i_will_monitor_cron.sh
-$ chmod a+x i_will_monitor_cron.sh
+$ touch monitor_cron.sh
+$ chmod a+x monitor_cron.sh
 ```
-![monitor_cron](img/monitor_cron.png)
+```
+#!/bin/bash
+
+sudo touch /home/ken/cron_md5
+sudo chmod 777 /home/ken/cron_md5
+m1="$(md5sum '/etc/crontab' | awk '{print $1}')"
+m2="$(cat '/home/ken/cron_md5')"
+
+if [ "$m1" != "$m2" ] ; then
+	md5sum /etc/crontab | awk '{print $1}' > /home/ken/cron_md5
+	echo "KO" | mail -s "Cronfile was changed" root@debian.lan
+fi
+```
 
 Add this line to `crontab`:
 ```
-* * * * * /home/kseniia/i_will_monitor_cron.sh &
+* * * * * sudo root /home/ken/monitor_cron.sh 
 ```
 #### to be able to use the mail command <a id="SetUpMail"></a>
 install the `bsd-mailx package`:
