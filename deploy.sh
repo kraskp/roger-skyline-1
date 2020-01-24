@@ -97,7 +97,8 @@ echo "auto enp0s3" >> interfaces
 echo "iface enp0s3 inet static" >> interfaces
 echo "    address ${IP_ADDRESS}" >> interfaces
 echo "    netmask ${NETMASK}" >> interfaces
-echo "    netmask ${BROADCAST}" >> interfaces
+echo "    broadcast 10.12.255.255" >> interfaces
+echo "    gateway 10.12.254.254" >> interfaces
 service networking restart || err "Failed to restart the networking service"
 echo
 
