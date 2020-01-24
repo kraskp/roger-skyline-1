@@ -94,9 +94,9 @@ echo "# The primary network interface" >> interfaces
 echo "auto enp0s3" >> interfaces
 # cd /etc/network/interfaces.d/
 # touch enp0s3
-echo "iface enp0s3 inet static" >> enp0s3
-echo "    address ${IP_ADDRESS}" >> enp0s3
-echo "    netmask ${NETMASK}" >> enp0s3
+echo "iface enp0s3 inet static" >> interfaces
+echo "    address ${IP_ADDRESS}" >> interfaces
+echo "    netmask ${NETMASK}" >> interfaces
 service networking restart || err "Failed to restart the networking service"
 echo
 
