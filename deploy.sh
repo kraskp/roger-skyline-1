@@ -82,10 +82,18 @@ done
 pr "Setting up static IP ${IP_ADDRESS} with netmask ${NETMASK}"
 cd /etc/network/
 chmod +w interfaces
+rm interfaces
+touch interfaces
+echo "# This file describes the network interfaces available on your system" >> interfaces
+echo "# and how to activate them. For more information, see interfaces(5)" >> interfaces
+echo "source /etc/network/interfaces.d/*" >> interfaces
+echo "# The loopback network interface" >> interfaces
+echo "auto lo" >> interfaces
+echo "auto lo inet loopback" >> interfaces
 echo "# The primary network interface" >> interfaces
 echo "auto enp0s3" >> interfaces
-cd /etc/network/interfaces.d/
-touch enp0s3
+# cd /etc/network/interfaces.d/
+# touch enp0s3
 echo "iface enp0s3 inet static" >> enp0s3
 echo "    address ${IP_ADDRESS}" >> enp0s3
 echo "    netmask ${NETMASK}" >> enp0s3
