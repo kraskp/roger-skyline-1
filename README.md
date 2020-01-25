@@ -59,7 +59,7 @@ exit root mode:
 ```
 $ exit
 ```
-but now, if we'll try to use `sudo`, the OS will respond: `kseniia is not in the sudoers file. This incident will be reported`. That means we need to open `/etc/sudoers` file as root. Don't forget to check rights on the file (must be writible!).
+but now, if we'll try to use `sudo`, the OS will respond: `ken is not in the sudoers file. This incident will be reported`. That means we need to open `/etc/sudoers` file as root. Don't forget to check rights on the file (must be writible!).
 ```
 $ pwd
 /etc
