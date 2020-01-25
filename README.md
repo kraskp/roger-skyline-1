@@ -414,7 +414,7 @@ Edit the file /etc/apache2/sites-available/default-ssl.conf so it looks like thi
 
 Add a redirect rule to /etc/apache2/sites-available/000-default.conf, to redirect HTTP to HTTPS:
 ```
-Redirect "/" "https://10.12.142.142/"
+Redirect "/" "https://10.12.124.124/"
 ```
 
 Enable everything changed and restart the Apache service:
