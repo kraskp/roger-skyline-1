@@ -240,7 +240,7 @@ echo
 
 pr "Generate SSL self-signed key and certificate"
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-	-subj "/C=UA/ST=/L=/O=/OU=/CN=${IP_ADDRESS}" \
+	-subj "/C=US/ST=Wisconsin/L=Green Bay/O=Packers/OU=Quarterback/CN=${IP_ADDRESS}" \
 	-keyout /etc/ssl/private/apache-selfsigned.key \
 	-out /etc/ssl/certs/apache-selfsigned.crt \
 	|| err_exit "Failed to generate SSL self-signed key and certificate"
