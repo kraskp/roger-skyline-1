@@ -117,6 +117,5 @@ sudo service sshd restart || err_exit "Failed to restart sshd"
 
 #Reboot Apache server, hopefully we have a live website
 systemctl reload apache2 || err_exit "Failed to restart apache"
-sudo fail2ban-client status
-
+sudo reboot
 pr_notice "Don't forget to setup SSH public key authentication on the host side!"
