@@ -41,8 +41,6 @@ cp /home/ken/roger-skyline-1/srcs/interfaces /etc/network/
 # configure ssh properly with fixed port
 rm -rf /etc/ssh/sshd_config
 cp /home/ken/roger-skyline-1/srcs/sshd/sshd_config /etc/ssh
-mkdir /home/ken/.ssh/
-cat /home/ken/roger-skyline-1/srcs/ssh/id_rsa.pub > /home/ken/.ssh/authorized_keys
 sudo service ssh restart || err "Restarting the SSH service failed"
 sudo service sshd restart || err "Restarting the SSHD service failed"
 sudo service networking restart || err "Restarting the networking service failed"
@@ -107,15 +105,16 @@ sudo a2ensite default-ssl
 sudo a2enconf ssl-params
 
 #Set up Firewall; Default DROP connections
+pr "Setting up firewall"
 sudo apt-get update && sudo apt-get upgrade
 yes "y" | sudo apt-get install ufw
 sudo ufw enable
 sudo ufw allow 50000/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
-sudo ufw reload
-sudo ssh service sshd restart
+sudo ufw reload || err_exit "Failed to restart ufw"
+sudo ssh service sshd restart || err_exit "Failed to restart sshd"
 
 #Reboot Apache server, hopefully we have a live website
-systemctl reload apache2
+systemctl reload apache2 || err_exit "Failed to restart apache"
 sudo fail2ban-client status
