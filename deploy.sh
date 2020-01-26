@@ -67,15 +67,15 @@ pr "Installing mailx and deploying cron jobs"
 sudo apt-get -y install mailx
 sudo apt-get -y install mailutils
 cp -r /home/ken/roger-skyline-1/srcs/scripts/ /home/ken/
-{ crontab -l -u root; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -u root -
-{ crontab -l -u root; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -u root -
-{ crontab -l -u root; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -u root -
-{ crontab -l -u ken; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -u ken -
-{ crontab -l -u ken; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -u ken -
-{ crontab -l -u ken; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -u ken -
-{ crontab -e; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -e -
-{ crontab -e; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -e -
-{ crontab -e; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -e -
+{ crontab -l -u root; echo '0 4 * * SUN sudo /home/ken/scripts/update.sh'; } | crontab -u root -
+{ crontab -l -u root; echo '@reboot sudo /home/ken/scripts/update.sh'; } | crontab -u root -
+{ crontab -l -u root; echo '0 0 * * * SUN /home/ken/scripts/monitor.sh'; } | crontab -u root -
+{ crontab -l -u ken; echo '0 4 * * SUN sudo /home/ken/scripts/update.sh'; } | crontab -u ken -
+{ crontab -l -u ken; echo '@reboot sudo /home/ken/scripts/update.sh'; } | crontab -u ken -
+{ crontab -l -u ken; echo '0 0 * * * SUN /home/ken/scripts/monitor.sh'; } | crontab -u ken -
+{ crontab -e; echo '0 4 * * SUN sudo /home/ken/scripts/update.sh'; } | crontab -e -
+{ crontab -e; echo '@reboot sudo /home/ken/scripts/update.sh'; } | crontab -e -
+{ crontab -e; echo '0 0 * * * SUN /home/ken/scripts/monitor.sh'; } | crontab -e -
 
 #install apache
 pr "Installing apache"
@@ -112,9 +112,11 @@ sudo ufw enable
 sudo ufw allow 50000/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
-sudo ufw reload || err_exit "Failed to restart ufw"
+sudo ufw reload || err_exit "Failed to reload firewall"
 sudo service sshd restart || err_exit "Failed to restart sshd"
 
 #Reboot Apache server, hopefully we have a live website
 systemctl reload apache2 || err_exit "Failed to restart apache"
 sudo fail2ban-client status
+
+pr_notice "Don't forget to setup SSH public key authentication on the host side!"
