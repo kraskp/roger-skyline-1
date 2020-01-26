@@ -64,8 +64,8 @@ echo
 
 #Install and configure portsentry
 sudo apt-get -y install portsentry
-cp /home/ken/roger-skyline-1/portsentry/portsentry /etc/default/ || err_exit "Failed to copy \"portsentry\""
-cp /home/ken/roger-skyline-1/portsentry/portsentry.conf /etc/portsentry/ || err_exit "Failed to copy \"portsentry.conf\""
+cp /home/ken/roger-skyline-1/srcs/portsentry/portsentry /etc/default/ || err_exit "Failed to copy \"portsentry\""
+cp /home/ken/roger-skyline-1/srcs/portsentry/portsentry.conf /etc/portsentry/ || err_exit "Failed to copy \"portsentry.conf\""
 
 # stop unneeded services
 pr "Stopping unneeded services"
