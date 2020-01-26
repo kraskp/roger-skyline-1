@@ -25,6 +25,11 @@ pr_notice () {
 	echo -e "${COLOR_NOTICE}${PRE_INFO}${1}${COLOR_RESET}"
 }
 
+# Set these values to be pre-answered for these packages,
+# in order to skip the interactive screen.
+echo "portsentry portsentry/startup_conf_obsolete note" | debconf-set-selections	
+echo "portsentry portsentry/warn_no_block note" | debconf-set-selections
+
 # Run with sudo.
 pr "Updating system"
 apt-get update -y || err_exit
@@ -53,6 +58,14 @@ cp /home/ken/roger-skyline-1/srcs/fail2ban/jail.local /etc/fail2ban/jail.local |
 cp /home/ken/roger-skyline-1/srcs/fail2ban/portscan.conf /etc/fail2ban/filter.d || err_exit "Failed to copy \"portscan.conf\""
 cp /home/ken/roger-skyline-1/srcs/fail2ban/http-get-dos.conf /etc/fail2ban/filter.d || err_exit "Failed to copy \"http-get-dos.conf\""
 sudo service fail2ban restart || err "Restarting fail2ban failed"
+pr "Printing the status of fail2ban"
+fail2ban-client status
+echo
+
+#Install and configure portsentry
+sudo apt-get -y install portsentry
+cp /home/ken/roger-skyline-1/portsentry/portsentry /etc/default/ || err_exit "Failed to copy \"portsentry\""
+cp /home/ken/roger-skyline-1/portsentry/portsentry.conf /etc/portsentry/ || err_exit "Failed to copy \"portsentry.conf\""
 
 # stop unneeded services
 pr "Stopping unneeded services"
