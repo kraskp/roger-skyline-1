@@ -113,7 +113,7 @@ sudo ufw allow 50000/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw reload || err_exit "Failed to restart ufw"
-sudo ssh service sshd restart || err_exit "Failed to restart sshd"
+sudo service sshd restart || err_exit "Failed to restart sshd"
 
 #Reboot Apache server, hopefully we have a live website
 systemctl reload apache2 || err_exit "Failed to restart apache"
