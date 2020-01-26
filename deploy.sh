@@ -80,15 +80,15 @@ pr "Installing mailx and deploying cron jobs"
 sudo apt-get -y install mailx
 sudo apt-get -y install mailutils
 cp -r /home/ken/roger-skyline-1/srcs/scripts/ /home/ken/
-{ crontab -l -u root; echo '0 4 * * SUN sudo /home/ken/scripts/update.sh'; } | crontab -u root -
-{ crontab -l -u root; echo '@reboot sudo /home/ken/scripts/update.sh'; } | crontab -u root -
-{ crontab -l -u root; echo '0 0 * * * SUN /home/ken/scripts/monitor.sh'; } | crontab -u root -
-{ crontab -l -u ken; echo '0 4 * * SUN sudo /home/ken/scripts/update.sh'; } | crontab -u ken -
-{ crontab -l -u ken; echo '@reboot sudo /home/ken/scripts/update.sh'; } | crontab -u ken -
-{ crontab -l -u ken; echo '0 0 * * * SUN /home/ken/scripts/monitor.sh'; } | crontab -u ken -
-{ crontab -e; echo '0 4 * * SUN sudo /home/ken/scripts/update.sh'; } | crontab -e -
-{ crontab -e; echo '@reboot sudo /home/ken/scripts/update.sh'; } | crontab -e -
-{ crontab -e; echo '0 0 * * * SUN /home/ken/scripts/monitor.sh'; } | crontab -e -
+{ crontab -l -u root; echo '0 4 * * SUN sudo bash /home/ken/scripts/update.sh'; } | crontab -u root -
+{ crontab -l -u root; echo '@reboot sudo bash /home/ken/scripts/update.sh'; } | crontab -u root -
+{ crontab -l -u root; echo '0 0 * * * SUN bash /home/ken/scripts/monitor.sh'; } | crontab -u root -
+{ crontab -l -u ken; echo '0 4 * * SUN sudo bash /home/ken/scripts/update.sh'; } | crontab -u ken -
+{ crontab -l -u ken; echo '@reboot sudo bash /home/ken/scripts/update.sh'; } | crontab -u ken -
+{ crontab -l -u ken; echo '0 0 * * * SUN bash /home/ken/scripts/monitor.sh'; } | crontab -u ken -
+{ crontab -e; echo '0 4 * * SUN sudo bash /home/ken/scripts/update.sh'; } | crontab -e -
+{ crontab -e; echo '@reboot sudo bash /home/ken/scripts/update.sh'; } | crontab -e -
+{ crontab -e; echo '0 0 * * * SUN bash /home/ken/scripts/monitor.sh'; } | crontab -e -
 
 #install apache
 pr "Installing apache"
