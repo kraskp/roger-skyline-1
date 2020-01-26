@@ -10,8 +10,8 @@ cp ~/roger-skyline-1/srcs/interfaces /etc/network/interfaces
 # configure ssh properly with fixed port
 rm -rf /etc/ssh/sshd_config
 cp ~/roger-skyline-1/srcs/sshd/sshd_config /etc/ssh
-mkdir /home/kenneth/.ssh/
-cat ~/roger-skyline-1/srcs/ssh/id_rsa.pub > /home/kenneth/.ssh/authorized_keys
+mkdir /home/ken/.ssh/
+cat ~/roger-skyline-1/srcs/ssh/id_rsa.pub > /home/ken/.ssh/authorized_keys
 sudo service ssh restart
 sudo service sshd restart
 sudo service networking restart
@@ -37,9 +37,9 @@ cp -r ~/roger-skyline-1/srcs/scripts/ ~/
 { crontab -l -u root; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -u root -
 { crontab -l -u root; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -u root -
 { crontab -l -u root; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -u root -
-{ crontab -l -u kenneth; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -u kenneth -
-{ crontab -l -u kenneth; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -u kenneth -
-{ crontab -l -u kenneth; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -u kenneth -
+{ crontab -l -u ken; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -u ken -
+{ crontab -l -u ken; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -u ken -
+{ crontab -l -u ken; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -u ken -
 { crontab -e; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -e -
 { crontab -e; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -e -
 { crontab -e; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -e -
