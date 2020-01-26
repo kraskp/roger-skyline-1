@@ -1,293 +1,80 @@
 #!/bin/bash
 
 # Run with sudo.
+sudo apt -y update
+sudo apt -y upgrade
 
-PRE_INFO="# "
-PRE_ERR="! "
+# Remove dhcp and create static ip
+cp ~/roger-skyline-1/srcs/interfaces /etc/network/interfaces
 
-COLOR_INFO="\033[0;36m"
-COLOR_NOTICE="\033[0;33m"
-COLOR_ERR="\033[0;31m"
-COLOR_RESET="\033[0m"
+# configure ssh properly with fixed port
+rm -rf /etc/ssh/sshd_config
+cp ~/roger-skyline-1/srcs/sshd/sshd_config /etc/ssh
+mkdir /home/kenneth/.ssh/
+cat ~/roger-skyline-1/srcs/ssh/id_rsa.pub > /home/kenneth/.ssh/authorized_keys
+sudo service ssh restart
+sudo service sshd restart
+sudo service networking restart
+sudo ifup enp0s3
 
-err () {
-	echo -e ${COLOR_ERR}${PRE_ERR}${1}${COLOR_RESET}	
-}
+#Install and configure Fail2Ban
+yes "y" | sudo apt-get -y install fail2ban
+cp ~/roger-skyline-1/srcs/fail2ban/jail.local /etc/fail2ban/jail.local
+cp ~/roger-skyline-1/srcs/fail2ban/portscan.conf /etc/fail2ban/filter.d
+sudo service fail2ban restart
 
-err_exit () {
-	err "${1} - exiting"
-	exit
-}
+# stop unneeded services
+sudo systemctl disable console-setup.service
+sudo systemctl disable keyboard-setup.service
+sudo systemctl disable apt-daily.timer
+sudo systemctl disable apt-daily-upgrade.timer
+sudo systemctl disable syslog.service
 
-pr () {
-	echo -e "${COLOR_INFO}${PRE_INFO}${1}${COLOR_RESET}"
-}
+#Copy and set up cron scripts for updating packages and detecting crontab changes
+sudo apt-get -y install mailx
+sudo apt-get -y install mailutils
+cp -r ~/roger-skyline-1/srcs/scripts/ ~/
+{ crontab -l -u root; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -u root -
+{ crontab -l -u root; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -u root -
+{ crontab -l -u root; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -u root -
+{ crontab -l -u kenneth; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -u kenneth -
+{ crontab -l -u kenneth; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -u kenneth -
+{ crontab -l -u kenneth; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -u kenneth -
+{ crontab -e; echo '0 4 * * SUN sudo ~/scripts/update.sh'; } | crontab -e -
+{ crontab -e; echo '@reboot sudo ~/scripts/update.sh'; } | crontab -e -
+{ crontab -e; echo '0 0 * * * SUN ~/scripts/monitor.sh'; } | crontab -e -
 
-pr_notice () {
-	echo -e "${COLOR_NOTICE}${PRE_INFO}${1}${COLOR_RESET}"
-}
+#install apache
+sudo apt install apache2 -y
+sudo systemctl enable apache2
+yes "y" | rm -rf /var/www/html/
+cp -r ~/roger-skyline-1/srcs/html/ /var/www/html/
 
-# Get all configurable values.
-source deploy.conf
+#Generate & Setup SSL
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=US/ST=Wisconsin/O=GreenBay/OU=Packers/CN=10.12.144.144" -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt
 
-# Save the full path to this script.
-SCRIPT_DIR="$( cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+cp ~/roger-skyline-1/srcs/ssl/ssl-params.conf /etc/apache2/conf-available/ssl-params.conf
+sudo cp /etc/apache2/sites-available/default-ssl.conf /etc/apache2/sites-available/default-ssl.conf.bak
+rm /etc/apache2/sites-available/default-ssl.conf
+cp ~/roger-skyline-1/srcs/ssl/default-ssl.conf /etc/apache2/sites-available/default-ssl.conf
+rm /etc/apache2/sites-available/000-default.conf
+cp ~/roger-skyline-1/srcs/ssl/000-default.conf /etc/apache2/sites-available/000-default.conf
 
-SRC_DIR="${SCRIPT_DIR}/src/"
-# Check that the src/ directory exists.
-[ ! -d "${SRC_DIR}" ] && err_exit "Source directory \"${SRC_DIR}\" does not exist"
+sudo a2enmod ssl
+sudo a2enmod headers
+sudo a2ensite default-ssl
+sudo a2enconf ssl-params
 
-WEB_DIR="${SCRIPT_DIR}/web/"
-# Check that the web/ directory exists.
-[ ! -d "${WEB_DIR}" ] && err_exit "Web directory \"${WEB_DIR}\" does not exist"
+#Set up Firewall; Default DROP connections
+sudo apt-get update && sudo apt-get upgrade
+yes "y" | sudo apt-get install ufw
+sudo ufw enable
+sudo ufw allow 50000/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw reload
+sudo ssh service sshd restart
 
-pr "Updating system"
-apt-get update -y || err_exit
-echo
-pr "Upgrading system"
-apt-get upgrade -y || err_exit
-echo
-
-# All the packages to install.
-declare -a pkgs=(
-"vim"
-"openssh-server" #Should be installed already, but just in case.
-"net-tools"
-"ufw"
-"iptables"
-"fail2ban"
-"apache2"
-"portsentry" # Opens up an interactive screen (->ENTER).
-"bsd-mailx" # Not needed, but can be useful for testing (sending mails manually).
-"postfix" # Opens up an interactive screen.
-"mutt" # Terminal mail client for root.
-)
-
-# Set these values to be pre-answered for these packages,
-# in order to skip the interactive screen.
-echo "postfix postfix/mailname string $MAIL_NAME" | debconf-set-selections
-echo "postfix postfix/main_mailer_type string Local only" | debconf-set-selections
-echo "postfix postfix/root_address string root@localhost" | debconf-set-selections
-echo "postfix postfix/protocols select ipv6" | debconf-set-selections
-echo "portsentry portsentry/startup_conf_obsolete note" | debconf-set-selections	
-echo "portsentry portsentry/warn_no_block note" | debconf-set-selections
-
-# Use DEBIAN_FRONTEND=noninteractive here to skip interactive screens.
-for p in ${pkgs[@]}; do
-	pr "Installing ${p}"
-	apt-get install -y $p || err_exit "Failed to install ${p}"
-	echo
-done
-
-pr "Setting up static IP ${IP_ADDRESS} with netmask ${NETMASK}"
-cd /etc/network/
-chmod +w interfaces
-rm interfaces
-touch interfaces
-echo "# This file describes the network interfaces available on your system" >> interfaces
-echo "# and how to activate them. For more information, see interfaces(5)" >> interfaces
-echo "source /etc/network/interfaces.d/*" >> interfaces
-echo "# The loopback network interface" >> interfaces
-echo "auto lo" >> interfaces
-echo "auto lo inet loopback" >> interfaces
-echo "# The primary network interface" >> interfaces
-echo "auto enp0s3" >> interfaces
-# cd /etc/network/interfaces.d/
-# touch enp0s3
-echo "iface enp0s3 inet static" >> interfaces
-echo "    address ${IP_ADDRESS}" >> interfaces
-echo "    netmask ${NETMASK}" >> interfaces
-echo "    broadcast 10.12.255.255" >> interfaces
-echo "    gateway 10.12.254.254" >> interfaces
-service networking restart || err "Failed to restart the networking service"
-echo
-
-pr "Printing ifconfig"
-ifconfig || err "Failed to start ifconfig"
-echo
-
-pr "Printing the SSHD service process"
-ps -ef | grep sshd
-echo
-
-pr "Setting SSH port number to ${SSH_PORT}"
-cd /etc/ssh/
-TMP=/tmp/roger_skyline_sshd_config.tmp
-cat sshd_config > $TMP
-sed -i "/^[[:blank:]]*#[[:blank:]]*Port[[:blank:]]*[0-9]*[[:blank:]]*$/c\Port ${SSH_PORT}" sshd_config
-diff sshd_config $TMP >/dev/null && err "Failed to change the SSH port - change the port (\"Port ${SSH_PORT}\") manually in /etc/ssh/sshd_config"
-rm $TMP
-echo
-
-pr "Disable SSH login for the root user"
-cd /etc/ssh/
-cat sshd_config > $TMP
-sed -i "/^[[:blank:]]*#[[:blank:]]*PermitRootLogin[[:blank:]]*[[:graph:]]*[[:blank:]]*$/c\PermitRootLogin no" sshd_config
-diff sshd_config $TMP >/dev/null && err "Failed to disable SSH root login - change it (\"PermitRootLogin no\") manually in /etc/ssh/sshd_config"
-rm $TMP
-echo
-
-pr "Restarting the SSHD service"
-sudo service sshd restart || err "Restarting the SSHD service failed"
-echo
-
-pr "Printing the status of SSH"
-systemctl status ssh || err "Failed to check the status of SSH"
-echo
-
-pr "Enabling ufw"
-ufw enable || err_exit "Failed to enable ufw"
-echo
-
-declare -a ufw_allow=(
-"${SSH_PORT}/tcp (SSH)"
-"80/tcp (HTTP)"
-"443 (HTTPS)"
-)
-for e in "${ufw_allow[@]}"; do
-	pr "Make ufw allow ${e}"
-	ufw allow `echo ${e} | awk '{print $1}'` || err_exit "Failed to make ufw allow ${e}"
-	echo
-done
-
-pr "Printing the status of ufw"
-ufw status
-echo
-
-pr "Deploying fail2ban src files"
-cp ${SRC_DIR}/jail.local /etc/fail2ban || err_exit "Failed to copy \"jail.local\""
-cp ${SRC_DIR}/http-get-dos.conf /etc/fail2ban/filter.d/ || err_exit "Failed to copy \"http-get-dos.conf\""
-echo
-
-pr "Restarting ufw and starting fail2ban"
-ufw reload || err "Failed to restart ufw"
-service fail2ban start || err_exit "Failed to start fail2ban"
-echo
-
-pr "Printing the status of fail2ban"
-fail2ban-client status
-echo
-
-pr "Deploying portsentry src files"
-cp ${SRC_DIR}/portsentry /etc/default/ || err_exit "Failed to copy \"portsentry\""
-cp ${SRC_DIR}/portsentry.conf /etc/portsentry/ || err_exit "Failed to copy \"portsentry.conf\""
-echo
-
-pr "Starting portsentry (it will now begin to block the port scans)"
-/etc/init.d/portsentry start || err_exit "Failed to start portsentry"
-echo
-
-declare -a services_to_disable=(
-"bluetooth"
-"console-setup"
-"keyboard-setup"
-)
-for e in "${services_to_disable[@]}"; do
-	pr "Disable service ${e}"
-	systemctl disable ${e}.service || err "Failed to disable the ${e} service"
-	echo
-done
-
-# Deploy cron jobs to the /home/[user who called sudo]/cronjobs/.
-TMP="/home/${SUDO_USER}/cronjobs"
-declare -a cronjobs=(
-"update.sh"
-"monitor_cron.sh"
-)
-
-pr "Deploying cron jobs to ${TMP}/"
-sudo -u $SUDO_USER mkdir $TMP >/dev/null
-for e in "${cronjobs[@]}"; do
-	sudo -u $SUDO_USER cp "${SRC_DIR}/${e}" "${TMP}" || err_exit "Failed to copy \"${e}\""
-	sudo chmod u+x "${TMP}/${e}"
-done
-echo
-
-DIR_CRONJOBS="${TMP}"
-for e in "${cronjobs[@]}"; do
-	pr "Adding crontab rules for ${e}"
-	TMP=/tmp/roger_skyline_crontab.tmp
-	sudo -u $SUDO_USER crontab -l > $TMP
-
-	if [ "${e}" == "update.sh" ]; then
-		echo "@reboot ${DIR_CRONJOBS}/${e} &" >> $TMP
-		echo "0 4 * * MON ${DIR_CRONJOBS}/${e} &" >> $TMP
-	elif [ "${e}" == "monitor_cron.sh" ]; then
-		echo "* * * * * ${DIR_CRONJOBS}/${e} &" >> $TMP
-	fi
-
-	sudo -u $SUDO_USER crontab $TMP || err_exit "Failed to add ${e} cron job"
-	echo
-done
-rm $TMP
-
-pr "Set root:root in etc/aliases"
-sed -i "/^[[:blank:]]*root:[[:blank:]]*[[:graph:]]*[[:blank:]]*$/c\root:root" /etc/aliases
-echo
-
-pr "Reload aliases"
-newaliases || err_exit "Failed reloading aliases"
-echo
-
-pr "Setting the home mailbox and restarting postfix"
-postconf -e "home_mailbox = ${MAIL_HOME_MAILBOX}"
-postfix reload || err_exit "Failed to restart postfix"
-echo
-
-pr "Deploying mutt src file" 
-cp ${SRC_DIR}/.muttrc /root || err_exit "Failed to copy .muttrc"
-echo
-
-pr "Generate SSL self-signed key and certificate"
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-	-subj "/C=US/ST=Wisconsin/L=Green Bay/O=Packers/OU=Quarterback/CN=${IP_ADDRESS}" \
-	-keyout /etc/ssl/private/apache-selfsigned.key \
-	-out /etc/ssl/certs/apache-selfsigned.crt \
-	|| err_exit "Failed to generate SSL self-signed key and certificate"
-echo
-
-pr "Deploying SSL params src file"
-cp ${SRC_DIR}/ssl-params.conf /etc/apache2/conf-available/ || err_exit "Failed to copy ssl-params.conf"
-echo
-
-pr "Deploying default SSL conf src file"
-cp ${SRC_DIR}/default-ssl.conf /etc/apache2/sites-available/ || err_exit "Failed to copy default-ssl.conf"
-echo
-
-pr "Deploying 000-default.conf src file"
-cp ${SRC_DIR}/000-default.conf /etc/apache2/sites-available/ || err_exit "Failed to copy 000-default.conf"
-echo
-
-pr "Deploy the webapp"
-# cp ${SRC_DIR}/login.html /var/www/html/ || err_exit "Failed to copy login.html"
-cp ${WEB_DIR}/_config.yml /var/www/html/ || err_exit "Failed to copy _config.yml"
-cp ${WEB_DIR}/app.js /var/www/html/ || err_exit "Failed to copy app.js"
-cp ${WEB_DIR}/buttons.js /var/www/html/ || err_exit "Failed to copy buttons.js"
-cp ${WEB_DIR}/index.html /var/www/html/ || err_exit "Failed to copy index.html"
-cp ${WEB_DIR}/style.css /var/www/html/ || err_exit "Failed to copy style.css"
-mkdir /var/www/html/img/ >/dev/null
-cp ${WEB_DIR}/img/apple-touch-icon-152x152.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-152x152.png"
-cp ${WEB_DIR}/img/apple-touch-icon-167x167.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-167x167.png"
-cp ${WEB_DIR}/img/apple-touch-icon-180x180.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon-180x180.png"
-cp ${WEB_DIR}/img/apple-touch-icon.png /var/www/html/img/ || err_exit "Failed to copy apple-touch-icon.png"
-cp ${WEB_DIR}/img/icon-hires.png /var/www/html/img/ || err_exit "Failed to copy icon-hires.pngg"
-cp ${WEB_DIR}/img/icon-normal.png /var/www/html/img/ || err_exit "Failed to copy icon-normal.png"
-
-echo
-
-pr_notice "Don't forget to setup SSH public key authentication on the host side!"
-echo
-pr_notice "Don't forget to copy the nameserver from host machine /etc/resolv.conf to this machine if needed!"
-echo
-
-pr "DEPLOYED"
-# sleep 2
-# pr "Deploy the"
-# sleep 2
-# cat ${SRC_DIR}/img_hamster_name
-# mkdir /var/www/html/img/ >/dev/null
-# cp ${SRC_DIR}/img/you.png /var/www/html/img/ || err_exit "Failed to copy you.png"
-# echo
-
-# sleep 1
-# cat ${SRC_DIR}/img_hamster
+#Reboot Apache server, hopefully we have a live website
+systemctl reload apache2
+sudo fail2ban-client status
